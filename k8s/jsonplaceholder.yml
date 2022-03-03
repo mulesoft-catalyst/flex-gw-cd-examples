@@ -1,38 +1,39 @@
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: hello-nodejs
+  name: jsonplaceholder
   labels:
-    app: hello-nodejs
-    service: hello-nodejs
+    app: jsonplaceholder
+    service: jsonplaceholder
 spec:
   ports:
   - name: http
     port: 80
     targetPort: http
   selector:
-    app: hello-nodejs
+    app: jsonplaceholder
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-nodejs
+  name: jsonplaceholder
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hello-nodejs
+      app: jsonplaceholder
       version: v1
   template:
     metadata:
       labels:
-        app: hello-nodejs
+        app: jsonplaceholder
         version: v1
     spec:
       containers:
-      - image: colinlennon/hello-microservices:1.0
+      - image: svenwal/jsonplaceholder
         imagePullPolicy: IfNotPresent
-        name: hello-nodejs
+        name: jsonplaceholder
         ports:
         - name: http
           containerPort: 3000
@@ -44,17 +45,16 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: hello-nodejs
+  name: jsonplaceholder
 spec:
-  ingressClassName: ingress-http.gateway  
+  ingressClassName: ingress-http.gateway
   rules:
   - http:
       paths:
-      - path: /
-        pathType: Prefix
+      - path: /api(/users/.*)
+        pathType: ImplementationSpecific
         backend:
           service:
-            name: hello-nodejs
+            name: jsonplaceholder
             port:
               number: 80
-
