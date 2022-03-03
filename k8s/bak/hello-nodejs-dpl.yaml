@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-nodejs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-nodejs
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: hello-nodejs
+        version: v1
+    spec:
+      containers:
+      - image: colinlennon/hello-microservices:1.0
+        imagePullPolicy: IfNotPresent
+        name: hello-nodejs
+        ports:
+        - name: http
+          containerPort: 3000
+        resources:
+          limits:
+            cpu: 100m
+            memory: 64Mi
