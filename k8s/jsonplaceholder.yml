@@ -58,10 +58,3 @@ spec:
             name: jsonplaceholder
             port:
               number: 80
-      - path: /applications
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: argocd-server
-            port:
-              number: 80
