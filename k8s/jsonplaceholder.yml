@@ -58,7 +58,7 @@ spec:
             name: jsonplaceholder
             port:
               number: 80
-      - path: /applications/(.*)
+      - path: /applications
         pathType: ImplementationSpecific
         backend:
           service:
