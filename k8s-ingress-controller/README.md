@@ -2,7 +2,9 @@
 
 This example shows how a Continuous Delivery solution can be implemented for a Flex Gateway instance installed as a Kubernetes ingress controller, in local mode. In this mode, Flex Gateway is mostly disconnected from the Anypoint control plane and is managed with declarative configuration files.
 
-This example uses [ArgoCD](https://argo-cd.readthedocs.io/en/stable/), a declarative, GitOps continuous delivery tool for Kubernetes. Configuration files which describe the *desired state* of the target cluster are stored within a GitHub repository. ArgoCD polls the repository in order to detect when the desired state has changed and applies changes to the target cluster in order to ensure that its *actual state* matches the desired state.
+**TODO: add diagram and text describing how Flex GW manages access to the jsonplaceholder microservice and a description of this microservice**
+
+This example uses [ArgoCD](https://argo-cd.readthedocs.io/en/stable/), a declarative, GitOps continuous delivery tool for Kubernetes. Configuration file(s) which describe the *desired state* of the target cluster are stored within a GitHub repository. ArgoCD polls the repository in order to detect when the desired state has changed and applies changes to the target cluster in order to ensure that its *actual state* matches the desired state.
 
 **Note: the steps below are correct at time of writing, based on a beta version of Flex Gateway. Please refer to the Flex Gateway documentation for up-to-date instructions on installing and configuring Flex Gateway.**
 
@@ -219,3 +221,4 @@ You should receive a response which includes the HTTP response code ```200 OK```
     "bs": "harness real-time e-markets"
   }
 ```
+16. **TODO: add something showing how a change to the desired state is automatically synced by ArgoCD, e.g. changing the username/password for the PolicyBinding**
