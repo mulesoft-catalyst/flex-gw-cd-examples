@@ -98,7 +98,7 @@ To fork this repo and configure your fork, follow these steps:
 Now, we can create a GitHub Personal Access Token. ArgoCD will use this token to access your GitHub repo. Create the token by following these steps:
 1. In GitHub, navigate to *Settings | Developer Settings | Personal Access Tokens*
 2. Click on the **Generate new token** button
-3. Specify a note which describes the purpose of the token. Select an expiration period. Select all of the *repo* scopes as shown:
+3. Specify a note which describes the purpose of the token. Select an expiration period. Select all of the *repo* scopes as shown:\
 ![alt text](https://github.com/mulesoft-consulting/flex-gw-cd-examples/blob/develop/k8s-ingress-controller/img/1-github-pat.png "GitHub PAT Screenshot")
 4. Click on the **Generate token** button at the bottom of the page.
 5. The *Personal access tokens* screen is displayed and your token is visible. Make sure to copy it (e.g. to a text editor window) as we will need this later and it will not be visible after you navigate away from this screen!
@@ -110,15 +110,15 @@ The `k8s-ingress-controller` directory within this repository contains example Y
 
 1. In a browser window, navigate to https://localhost:8080. You can choose to ignore any certificate validity warnings and you should reach the login screen. If not, check to ensure that you have the port-forwarding command running as described above.
 2. Log in as the `admin` user, using the password you set earlier for this user.
-3. Click on the *Settings* icon on the navigation bar on the left of the screen, then click on *Repositories*
+3. Click on the *Settings* icon on the navigation bar on the left of the screen, then click on *Repositories*\
 ![alt text](https://github.com/mulesoft-consulting/flex-gw-cd-examples/blob/develop/k8s-ingress-controller/img/2-argocd-settings.png "ArgoCD Settings screenshot")
 4. In the *Repositories* screen, a message states that no repositories are connected. Click on the **Connect Repo using HTTPS** button.
-5. In the dialog, populate the *Type*, *Project*, *Repository URL*, *Username* and *Password* fields as shown below. We don't need to provide a username because we're using a token, so we can just enter `not-used` in the *Username* field. In the *Password* field, paste the GitHub Personal Access Token string which we copied earlier. 
+5. In the dialog, populate the *Type*, *Project*, *Repository URL*, *Username* and *Password* fields as shown below. We don't need to provide a username because we're using a token, so we can just enter `not-used` in the *Username* field. In the *Password* field, paste the GitHub Personal Access Token string which we copied earlier.\
 ![alt text](https://github.com/mulesoft-consulting/flex-gw-cd-examples/blob/develop/k8s-ingress-controller/img/3-argocd-connect-repo.png "Connect to Repo screenshot")
 6. We can use the default values for all other fields. Click on the **Connect** button.
-7. The *Repositories* screen is shown again, but this time, the repository connection we just created is listed. Check to make sure that the *Connection Status* is **SUCCESSFUL** as shown below.
+7. The *Repositories* screen is shown again, but this time, the repository connection we just created is listed. Check to make sure that the *Connection Status* is **SUCCESSFUL** as shown below.\
 ![alt text](https://github.com/mulesoft-consulting/flex-gw-cd-examples/blob/develop/k8s-ingress-controller/img/4-argocd-repos.png "Repos list")
-8. Click on the three dots to the right of the *Connection Status* and select *Create Application*.
+8. Click on the three dots to the right of the *Connection Status* and select *Create Application*.\
 ![alt text](https://github.com/mulesoft-consulting/flex-gw-cd-examples/blob/develop/k8s-ingress-controller/img/5-argocd-create-app.png "Create app")
 9. In the *Create Application* dialog:
 - specify an *Application Name* and select the ```default``` project. 
@@ -150,9 +150,9 @@ spec:
       - CreateNamespace=true
 ```
 11. Click on the **Create** button.
-12. The *Applications* screen is displayed, and the app we just created is shown. Initially, the status is *Missing, OutOfSync, Syncing* because the desired state defined in the GitHub repo does not exist on the target cluster:
+12. The *Applications* screen is displayed, and the app we just created is shown. Initially, the status is *Missing, OutOfSync, Syncing* because the desired state defined in the GitHub repo does not exist on the target cluster:\
 ![alt text](https://github.com/mulesoft-consulting/flex-gw-cd-examples/blob/develop/k8s-ingress-controller/img/7-argocd-app-tile.png "app tile")
-13. Click on the app name to view further details. The *Current Sync Status* should change to **Synced** and a diagram is displayed depicting the resources which have been configured on the cluster:
+13. Click on the app name to view further details. The *Current Sync Status* should change to **Synced** and a diagram is displayed depicting the resources which have been configured on the cluster:\
 ![alt text](https://github.com/mulesoft-consulting/flex-gw-cd-examples/blob/develop/k8s-ingress-controller/img/8-argocd-app-details.png "app details")
 14. From a CLI window, run this command to try to access the *jsonplaceholder* microservice via Flex Gateway:
 ```
