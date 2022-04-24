@@ -1,10 +1,12 @@
-# Kubernetes Ingress Controller
+# Kubernetes Sidecar
 
-This example shows how a Continuous Delivery solution can be implemented for a Flex Gateway instance installed as a Kubernetes ingress controller, in local mode. In this mode, Flex Gateway is mostly disconnected from the Anypoint control plane and is managed with declarative configuration files.
+This example shows how a Continuous Delivery solution can be implemented for a Flex Gateway instance installed as a sidecar within a Kubernetes cluster, in local mode. In this mode, Flex Gateway is mostly disconnected from the Anypoint control plane and is managed with declarative configuration files.
 
 **TODO: add diagram and text describing how Flex GW manages access to the jsonplaceholder microservice and a description of this microservice**
 
-This example uses [ArgoCD](https://argo-cd.readthedocs.io/en/stable/), a declarative, GitOps continuous delivery tool for Kubernetes. Configuration file(s) which describe the *desired state* of the target cluster are stored within a GitHub repository. ArgoCD polls the repository in order to detect when the desired state has changed and applies changes to the target cluster in order to ensure that its *actual state* matches the desired state.
+This example uses [ArgoCD](https://argo-cd.readthedocs.io/en/stable/), a declarative, GitOps continuous delivery tool for Kubernetes. Configuration files which describe the *desired state* of the target cluster are stored within a GitHub repository. ArgoCD polls the repository in order to detect when the desired state has changed and applies changes to the target cluster in order to ensure that its *actual state* matches the desired state.
+
+In this example, the configuration is defined across multiple configuration files. It is also possible to store this in a single file, as shown in the [k8s-ingress-controller example](https://github.com/mulesoft-consulting/flex-gw-cd-examples/tree/develop/k8s-ingress-controller).
 
 **Note: the steps below are correct at time of writing, based on a beta version of Flex Gateway. Please refer to the Flex Gateway documentation for up-to-date instructions on installing and configuring Flex Gateway.**
 
@@ -13,15 +15,15 @@ This example uses [ArgoCD](https://argo-cd.readthedocs.io/en/stable/), a declara
 1. A tool to create Kubernetes clusters. This example was developed using [k3d](https://k3d.io/).
 2. [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl), a tool used to interact with Kubernetes clusters.
 3. [Helm](https://helm.sh/docs/intro/install/), a tool used to install Flex Gateway. Version 3.0.0 or later is required.
+4. [Docker](https://docs.docker.com/get-docker/), required to register a Flex Gateway instance using the `flexctl` command
 
 ## Prepare and Install Flex Gateway
 
 1. Create a new Kubernetes cluster with a single server node:
 ```
-k3d cluster create flex-gateway-1 \
---k3s-arg "--disable=traefik@server:*" \
---port '80:80@server:*' \
---port '443:443@server:*'
+k3d cluster create flex-sidecar \
+--k3s-arg "--disable=traefik@server:0" \
+--port "8082:30080@server:0"
 ```
 2. Download the Flex Gateway container image:
 ```
@@ -42,8 +44,13 @@ helm repo up
 ```
 6. Using Ingress, install the flex-gateway Helm chart into the gateway namespace:
 ```
-helm -n gateway upgrade -i --wait --create-namespace ingress flex-gateway/flex-gateway
+helm -n gateway upgrade -i --wait --create-namespace gateway flex-gateway/flex-gateway
 ```
+At this point, we can get the manifest for the gateway helm release:
+```
+helm get manifest gateway -n gateway > gateway_release_manifest.yaml
+```
+This step isn't required, but obtaining the manifest at this point is helpful in understanding the configuration changes we make after this point (by having ArgoCD apply the YAML configuration files) in order to configure Flex Gateway as a sidecar within the cluster. 
 7. Verify **apiinstances** were created during installation:
 ```
 kubectl -n gateway get apiinstances
@@ -54,6 +61,8 @@ NAME            ADDRESS
 ingress-http    http://0.0.0.0:80
 ingress-https   http://0.0.0.0:443
 ```
+
+**TODO: add details on how to register the gateway**
 
 ## Install ArgoCD
 
