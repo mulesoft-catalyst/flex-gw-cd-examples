@@ -222,4 +222,12 @@ You should receive a response which includes the HTTP response code ```200 OK```
     "bs": "harness real-time e-markets"
   }
 ```
-16. **TODO: add something showing how a change to the desired state is automatically synced by ArgoCD, e.g. changing the username/password for the PolicyBinding**
+16. To observe ArgoCD automatically detecting changes to the deired state and updating the Flex Gateway instance, try changing the username and password within the `PolicyBinding` at the bottom of the `jsonplaceholder.yaml` file. Commit this change to the `develop` branch of your repo. In the ArgoCD user interface, observe the commit being detected and the configuration being updated. You can then test with the old password - 
+```
+curl -u foo:bar -v http://localhost/api/users/1
+```
+... and you should receive a ```401 Unauthorized``` response. Now try again, with the new username and password (replace the placeholders in the command below - 
+```
+curl -u <new-username>:<new-password> -v http://localhost/api/users/1
+```
+You should receive a response which includes the HTTP response code ```200 OK``` and the same JSON object in the response body as in step 15 above.
