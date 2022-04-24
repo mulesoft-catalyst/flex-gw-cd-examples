@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jsonplaceholder-sidecar
+  namespace: gateway  
+  labels:
+    app: jsonplaceholder-sidecar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jsonplaceholder-sidecar
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: jsonplaceholder-sidecar
+        version: "2"
+    spec:
+      containers:      
+      - name: jsonplaceholder 
+        image: svenwal/jsonplaceholder
+        imagePullPolicy: IfNotPresent        
+        ports:
+        - name: http
+          containerPort: 3000
+        resources:
+          limits:
+            cpu: 100m
+            memory: 64Mi
+      - name: gw
+        env:
+        - name: MGW_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: MGW_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        image: "mulesoft/flex-gateway:1.0.0-beta.3"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/peregrine/conf.d/custom
+      volumes:
+      - name: config
+        configMap:
+          name: jsonplaceholder-sidecar-config
+      restartPolicy: Always
