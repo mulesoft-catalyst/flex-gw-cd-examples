@@ -34,16 +34,22 @@ spec:
             memory: 64Mi
       - name: gw
         env:
-        - name: MGW_NAME
+        - name: FLEX_NAME
           valueFrom:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.name
-        - name: MGW_NAMESPACE
+        - name: FLEX_NAMESPACE
           valueFrom:
             fieldRef:
               apiVersion: v1
               fieldPath: metadata.namespace
+        - name: FLEX_RTM_ARM_AGENT_CONFIG
+          value: /etc/peregrine/register/platform.conf
+        - name: FLEX_DATASOURCE_K8S_ENABLED
+          value: "true"
+        - name: FLEX_K8S_WATCH_NAMESPACE
+          value: ""
         image: "mulesoft/flex-gateway:1.0.0-rc.2"
         imagePullPolicy: IfNotPresent
         ports:
@@ -55,10 +61,13 @@ spec:
             cpu: 100m
             memory: 256Mi
         volumeMounts:
-        - name: config
-          mountPath: /etc/peregrine/conf.d/custom
+          - mountPath: "/etc/peregrine/register"
+            name: config
+            readOnly: true
       volumes:
       - name: config
+        secret:
+          secretName: 75a0a73e-6cbb-4e9c-b115-5a6801563579
         configMap:
           name: jsonplaceholder-sidecar-config
       restartPolicy: Always
