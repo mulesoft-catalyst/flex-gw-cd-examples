@@ -17,7 +17,7 @@ In this example, the configuration is defined across multiple configuration file
 3. [Helm](https://helm.sh/docs/intro/install/), a tool used to install Flex Gateway. Version 3.0.0 or later is required.
 4. [Docker](https://docs.docker.com/get-docker/), required to register a Flex Gateway instance using the `flexctl` command
 
-## Prepare and Install Flex Gateway
+## Prepare Your Environment
 
 1. Create a new Kubernetes cluster with a single server node:
 ```
@@ -25,16 +25,58 @@ k3d cluster create flex-sidecar \
 --k3s-arg "--disable=traefik@server:0" \
 --port "8082:30080@server:0"
 ```
-2. Download the Flex Gateway container image:
+2. Pull the Flex Gateway container image from Docker Hub:
 ```
-curl -o flex-gateway-1.0.0-beta.15.tar \
-https://peregrine:48bcfd4617c9cce@d8wbbsqfcfi8u.cloudfront.net/docker/flex-gateway-1.0.0-beta.15.tar
+docker pull mulesoft/flex-gateway:1.0.0-rc.2
 ```
-3. Import the Flex Gateway container image:
+3. Save it to a .tar file (this is needed for running the registration command later) - 
+```
+docker save mulesoft/flex-gateway:1.0.0-rc.2 > flex-gateway-1.0.0-rc.2.tar
+```
+4 . Import the Flex Gateway container image: **TBC - do we still need this step?**
 ```
 k3d image import -c flex-gateway-1 flex-gateway-1.0.0-beta.15.tar
 ```
-4. Add the Flex Gateway Helm repository:
+
+## Run the Registration Command
+
+You can register Flex Gateway using a username and password, a connected app or a token. In this example, we will use a username and password. Please refer to the docs for full details of each option.
+
+1. Obtain the Organization ID and of your Anypoint Platform organization
+2. Obtain the Environment ID for the environment where you want to run Flex Gateway
+3. After replacing the sample content, register your Flex Gateway by executing the following command. Here, we have specified that we want to run it in local mode by specifying `connected=false`:
+```
+docker run --entrypoint flexctl -w /registration -v $(pwd):/registration mulesoft/flex-gateway:1.0.0-rc.2 \
+register \
+--username=<your-username> \
+--password=<your-password> \
+--environment=<your-environment-id> \
+--connected=false \
+--organization=<your-org-id> \
+--anypoint-url=https://<your-instance>.anypoint.mulesoft.com \
+my-gateway
+```
+
+## Run the Installation Commands
+
+1. Create the namespace in which Flex Gateway will be installed:
+```
+kubectl create namespace gateway
+```
+2. You should see three new files in the directory where you executed the registration command. They look similar to the following. Note your UUID, which is the filename minus the file type:
+```
+e1bd8346-51f2-4a4b-b421-7e0ed57e98d4.conf
+e1bd8346-51f2-4a4b-b421-7e0ed57e98d4.key
+e1bd8346-51f2-4a4b-b421-7e0ed57e98d4.pem
+```
+Create a Kubernetes secret from your files:
+```
+kubectl -n gateway create secret generic <UUID-of-your-file> \
+--from-file=platform.conf=<UUID-of-your-file>.conf \
+--from-file=platform.key=<UUID-of-your-file>.key \
+--from-file=platform.pem=<UUID-of-your-file>.pem
+```
+3. Add the Flex Gateway Helm repository:
 ```
 helm repo add flex-gateway https://flex-packages.stgx.anypoint.mulesoft.com/helm
 ```
@@ -42,9 +84,11 @@ helm repo add flex-gateway https://flex-packages.stgx.anypoint.mulesoft.com/helm
 ```
 helm repo up
 ```
-6. Using Ingress, install the flex-gateway Helm chart into the gateway namespace:
+6. Install the flex-gateway Helm chart into the gateway namespace:
 ```
-helm -n gateway upgrade -i --wait --create-namespace gateway flex-gateway/flex-gateway
+helm -n gateway upgrade -i --wait gateway flex-gateway/flex-gateway \
+--set registerSecretName=<UUID-of-your-file> \
+--devel
 ```
 At this point, we can get the manifest for the gateway helm release:
 ```
@@ -61,8 +105,6 @@ NAME            ADDRESS
 ingress-http    http://0.0.0.0:80
 ingress-https   http://0.0.0.0:443
 ```
-
-**TODO: add details on how to register the gateway**
 
 ## Install ArgoCD
 
@@ -97,7 +139,7 @@ argocd account update-password
 ```
  
 ## Create a source code repository
-The `k8s-ingress-controller` directory within this repository contains example YAML configuration files which describe the *desired state* of the Flex Gateway cluster we created above. We will create a new application in ArgoCD, which will use these files to configure the cluster. Before we can do this, we need to create a source code repository which the ArgoCD application will connect to. In this example, we **fork** this GitHub repo, then configure ArgoCD to connect to it. ArgoCD can be configured to connect to other Git-based SCMs too - please refer to the docs if needed. 
+The `k8s-sidecar` directory within this repository contains example YAML configuration files which describe the *desired state* of the Flex Gateway cluster we created above. We will create a new application in ArgoCD, which will use these files to configure the cluster. Before we can do this, we need to create a source code repository which the ArgoCD application will connect to. In this example, we **fork** this GitHub repo, then configure ArgoCD to connect to it. ArgoCD can be configured to connect to other Git-based SCMs too - please refer to the docs if needed. 
 
 To fork this repo and configure your fork, follow these steps:
 1. Navigate to https://github.com/mulesoft-consulting/flex-gw-cd-examples and click on the **Fork** button in the top-right.
@@ -114,7 +156,7 @@ Now, we can create a GitHub Personal Access Token. ArgoCD will use this token to
 
 ## Create an ArgoCD Application
 
-The `k8s-ingress-controller` directory within this repository contains example YAML configuration files which describe the *desired state* of the Flex Gateway cluster we created above. We will now create a new application in ArgoCD, which will use these files to configure the cluster.
+We will now create a new application in ArgoCD, which will use the configuration files in the source code repository we've just created (the fork of this repository) to configure the cluster.
 **TODO: list the files and describe their content here** 
 
 1. In a browser window, navigate to https://localhost:8080. You can choose to ignore any certificate validity warnings and you should reach the login screen. If not, check to ensure that you have the port-forwarding command running as described above.
