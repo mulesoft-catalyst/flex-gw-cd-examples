@@ -90,8 +90,8 @@ At this point, we can get the manifest for the gateway helm release:
 ```
 helm get manifest gateway -n gateway > gateway_release_manifest.yaml
 ```
-This step isn't required, but obtaining the manifest at this point is helpful in understanding the configuration changes we make after this point (by having ArgoCD apply the YAML configuration files) in order to configure Flex Gateway as a sidecar within the cluster. 
-7. Verify **apiinstances** were created during installation:
+This step isn't required, but obtaining the manifest at this point is helpful in understanding the resources which are created by the Helm chart.
+7. Verify that two `APIInstance` resources were created during installation:
 ```
 kubectl -n gateway get apiinstances
 ```
@@ -100,6 +100,13 @@ The command returns output similar to the following:
 NAME            ADDRESS
 ingress-http    http://0.0.0.0:80
 ingress-https   http://0.0.0.0:443
+```
+8. We now need to delete some of the resources which have been created by the Helm chart. We delete the two `APIInstance` resources wihch were created, as these are not needed in a sidecar deployment. We also create the `Service` and `Deployment` resources. These will be recreated later in our CD pipeline. 
+```
+kubectl delete apiinstance gateway-http -n gateway
+kubectl delete apiinstance gateway-https -n gateway
+kubectl delete service gateway -n gateway
+kubectl delete deployment gateway -n gateway
 ```
 
 ## Install ArgoCD
