@@ -65,7 +65,7 @@ spec:
             mountPath: "/etc/peregrine/register"
             readOnly: true
           - name: configmap
-            mountPath: /etc/peregrine/conf.d/custom
+            mountPath: "/etc/mulesoft/flex-gateway/conf.d/custom"
 
       volumes:
       - name: config
