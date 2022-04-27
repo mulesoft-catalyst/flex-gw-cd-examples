@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     app: jsonplaceholder-sidecar
-  name: sidecar
+  name: gateway
   namespace: gateway
 spec:
   ports:
