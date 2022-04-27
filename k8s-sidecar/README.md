@@ -33,10 +33,6 @@ docker pull mulesoft/flex-gateway:1.0.0-rc.2
 ```
 docker save mulesoft/flex-gateway:1.0.0-rc.2 > flex-gateway-1.0.0-rc.2.tar
 ```
-4 . Import the Flex Gateway container image: **TBC - do we still need this step?**
-```
-k3d image import -c flex-gateway-1 flex-gateway-1.0.0-beta.15.tar
-```
 
 ## Run the Registration Command
 
@@ -145,6 +141,7 @@ To fork this repo and configure your fork, follow these steps:
 1. Navigate to https://github.com/mulesoft-consulting/flex-gw-cd-examples and click on the **Fork** button in the top-right.
 2. Select an owner and specify a name for your repository
 3. Click on the **Create fork** button. The new repo is created and you are redirected to the repo homepage.
+4. In your fork, within the `develop` branch, edit the `deployment.yaml` file. On line 73, replace the `<UUID>` placeholder with the UUID for your registration. This can be obtained from the filenames of your `.conf`, `.key` and `.pem` files as discussed above.
 
 Now, we can create a GitHub Personal Access Token. ArgoCD will use this token to access your GitHub repo. Create the token by following these steps:
 1. In GitHub, navigate to *Settings | Developer Settings | Personal Access Tokens*
