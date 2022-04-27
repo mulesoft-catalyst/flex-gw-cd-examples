@@ -91,6 +91,7 @@ At this point, we can get the manifest for the gateway helm release:
 helm get manifest gateway -n gateway > gateway_release_manifest.yaml
 ```
 This step isn't required, but obtaining the manifest at this point is helpful in understanding the resources which are created by the Helm chart.
+
 7. Verify that two `APIInstance` resources were created during installation:
 ```
 kubectl -n gateway get apiinstances
