@@ -1,0 +1,113 @@
+#!groovy
+pipeline {
+    agent any
+    options {
+        skipDefaultCheckout true
+    }
+    environment {
+        BUILD_VERSION = "build.${currentBuild.number}"
+        CLIENT_ID = credentials('anypoint.platform.clientId')
+        CLIENT_SECRET = credentials('anypoint.platform.clientSecret')
+        ANYPOINT_PLATFORM_ORG_ID = credentials('anypoint.platform.org.id')
+    }
+    parameters {
+        choice( name: 'BRANCH', choices: "master\ndev", description: 'Project branch' )
+        choice( name: 'ENVIRONMENT', choices: "sandbox\nproduction", description: 'Environment where API Instance will be deployed' )
+        string( name: 'FLEX_GATEWAY_NAME', defaultValue: 'anypoint-flex-gateway', description: 'Name for the Anypoint Flex Gateway (Default: anypoint-flex-gateway)' )
+        string( name: 'MICRO_SERVICE_URI', defaultValue: 'http://host.docker.internal:3000', description: 'URI for the Micro Service to be managed by Anypoint Flex Gateway (Default: http://host.docker.internal:3000)' )
+        string( name: 'PROXY_URI', defaultValue: 'http://0.0.0.0:8081/api', description: 'URI that will expose the Micro Service managed by by Anypoint Flex Gateway (Default: http://0.0.0.0:8081/api)' )
+
+    }
+    stages{
+        stage('Checkout Release') {
+            steps {
+                script {
+                    def githubUrl = scm.userRemoteConfigs[0].url
+                    print "GitHub URL: " + githubUrl
+                    echo "Checking out Release from GitHub..."
+                    checkout([$class: 'GitSCM', 
+                            branches: [[name: "${params.BRANCH}"]], 
+                            doGenerateSubmoduleConfigurations: false, 
+                            extensions: [], 
+                            submoduleCfg: [], 
+                            userRemoteConfigs: [[ url: "${githubUrl}"]]])
+                    }
+                echo "Checkout Release completed: ${currentBuild.currentResult}"
+            }
+        }
+        stage("Install dependencies") {
+            steps {
+                sh "npm install"
+            }
+        }
+        stage('Register API Instance in Flex Gateway') {
+            steps {
+                script {
+                    echo "Registering API Instance in Flex Gateway and Applying Policies"
+                    sh """ newman run postman/FGW-Connected-Mode-CD-Newman.postman_collection.json \
+                                --env-var clientId=$CLIENT_ID \
+                                --env-var clientSecret=$CLIENT_SECRET \
+                                --env-var url=https://devx.anypoint.mulesoft.com/accounts/api/v2/oauth2/token \
+                                --env-var anypointBaseUrl=devx \
+                                --env-var environmentName=${params.ENVIRONMENT} \
+                                --env-var gatewayVersion=1.0.0 \
+                                --env-var apiLabel=node-films-app-sandbox \
+                                --env-var assetGroupId=$ANYPOINT_PLATFORM_ORG_ID \
+                                --env-var assetId=node-films-app \
+                                --env-var assetSemmanticVersion=1.0.0 \
+                                --env-var assetVersion=v1 \
+                                --env-var assetType=http-api \
+                                --env-var backendServiceUri=${params.MICRO_SERVICE_URI} \
+                                --env-var proxyUri=${params.PROXY_URI} \
+                                --env-var gatewayName=${params.FLEX_GATEWAY_NAME} \
+                                --env-var gatewayVersion=1.0.0 \
+                                --env-var username=us3r \
+                                --env-var password=p4ssw0rd \
+                                --disable-unicode \
+                                --reporters cli,json \
+                                --reporter-json-export promote-api-output.json """
+                    echo "API Instance Registered in Flex Gateway: ${currentBuild.currentResult}"
+                }
+            }    
+            post {
+                success {
+                    echo "...Registration of API Instance succeded for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                } 
+                failure {
+                    echo "...Registration of API Instance failed for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                }
+            }
+        }
+        stage('Deploy to Docker Container') {
+            steps {
+                script {
+                    echo "Deploying to Docker Container"
+                    sh """docker build -t node-app-container:latest . """
+                    echo "Building new Docker Image based on Dockerfile"
+                    sh """docker run --name node-app-${BUILD_NUMBER} --publish 0.0.0.0:3000:3000 --detach node-app-container:latest"""
+                    echo "App deployed in Docker container"
+                }
+            }       
+            post {
+                success {
+                    echo "...Deploy to Docker Succeeded for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                } 
+                failure {
+                    echo "...Deploy to Docker Failed for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                }
+            }
+        }        
+    }
+    post {
+        success {
+            echo "All Good: ${env.RELEASE_VERSION}: ${currentBuild.currentResult}"    
+        }
+        failure {
+            echo "Not So Good: ${env.RELEASE_VERSION}: ${currentBuild.currentResult}"
+        }         
+        always {
+            echo "Pipeline result: ${currentBuild.result}"
+            echo "Pipeline currentResult: ${currentBuild.currentResult}"
+        }
+    }
+}  
