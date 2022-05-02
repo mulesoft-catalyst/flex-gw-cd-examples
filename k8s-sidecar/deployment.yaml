@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jsonplaceholder-sidecar
+  namespace: gateway  
+  labels:
+    app: jsonplaceholder-sidecar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jsonplaceholder-sidecar
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: jsonplaceholder-sidecar
+        version: "2"
+    spec:
+      containers:      
+      - name: jsonplaceholder 
+        image: svenwal/jsonplaceholder
+        imagePullPolicy: IfNotPresent        
+        ports:
+        - name: http
+          containerPort: 3000
+        resources:
+          limits:
+            cpu: 100m
+            memory: 64Mi
+      - name: gw
+        env:
+        - name: FLEX_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: FLEX_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: FLEX_RTM_ARM_AGENT_CONFIG
+          value: /etc/peregrine/register/platform.conf
+        - name: FLEX_DATASOURCE_K8S_ENABLED
+          value: "true"
+        - name: FLEX_K8S_WATCH_NAMESPACE
+          value: ""
+        image: "mulesoft/flex-gateway:1.0.0-rc.2"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+          - name: config
+            mountPath: "/etc/peregrine/register"
+            readOnly: true
+          - name: configmap
+            mountPath: "/etc/mulesoft/flex-gateway/conf.d/custom"
+
+      volumes:
+      - name: config
+        secret:
+          secretName: 97d01d2f-011c-43a4-be9d-43df4cece1c7
+      - name: configmap  
+        configMap:
+          name: jsonplaceholder-sidecar-config
+      restartPolicy: Always
