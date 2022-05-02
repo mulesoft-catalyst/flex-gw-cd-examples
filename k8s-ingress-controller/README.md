@@ -2,7 +2,7 @@
 
 This example shows how a Continuous Delivery solution can be implemented for a Flex Gateway instance installed as a Kubernetes ingress controller, in local mode. In this mode, Flex Gateway is mostly disconnected from the Anypoint control plane and is managed with declarative configuration files.
 
-**TODO: add diagram and text describing how Flex GW manages access to the jsonplaceholder microservice and a description of this microservice**
+![K8S Ingress Controller deployment architecture](img/deploy_arch_k8s_ingress.png)
 
 This example uses [ArgoCD](https://argo-cd.readthedocs.io/en/stable/), a declarative, GitOps continuous delivery tool for Kubernetes. Configuration file(s) which describe the *desired state* of the target cluster are stored within a GitHub repository. ArgoCD polls the repository in order to detect when the desired state has changed and applies changes to the target cluster in order to ensure that its *actual state* matches the desired state.
 
