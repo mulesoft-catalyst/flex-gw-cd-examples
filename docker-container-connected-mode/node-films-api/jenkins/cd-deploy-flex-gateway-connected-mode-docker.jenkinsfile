@@ -1,0 +1,123 @@
+#!groovy
+pipeline {
+    agent any
+    options {
+        skipDefaultCheckout true
+    }
+    environment {
+        BUILD_VERSION = "build.${currentBuild.number}"
+        CLIENT_ID = credentials('anypoint.platform.clientId')
+        CLIENT_SECRET = credentials('anypoint.platform.clientSecret')
+        ANYPOINT_PLATFORM_ORG_ID = credentials('anypoint.platform.org.id')
+    }
+    parameters {
+        choice( name: 'BRANCH', choices: "master\ndev", description: 'Project branch' )
+        choice( name: 'ENVIRONMENT', choices: "sandbox\nproduction", description: 'Environment where Anypoint Flex Gateway will be deployed' )
+        string( name: 'FLEX_GATEWAY_NAME', defaultValue: 'anypoint-flex-gateway', description: 'Name for the Anypoint Flex Gateway (Default: anypoint-flex-gateway)' )
+        string( name: 'DOCKER_FORWARDING_PORT', defaultValue: '8081:8081', description: 'Port where Anypoint Flex Gateway Docker containerwill listen/forward traffic (Default: 8081:8081)' )
+        string( name: 'FLEX_GATEWAY_NODE_NAME', defaultValue: 'node01', description: 'Name for the Anypoint Flex Gateway Node (Default: node01)' )
+    }
+    stages{
+        stage('Checkout Release') {
+            steps {
+                script {
+                    def githubUrl = scm.userRemoteConfigs[0].url
+                    print "GitHub URL: " + githubUrl
+                    echo "Checking out Release from GitHub..."
+                    checkout([$class: 'GitSCM', 
+                            branches: [[name: "${params.BRANCH}"]], 
+                            doGenerateSubmoduleConfigurations: false, 
+                            extensions: [], 
+                            submoduleCfg: [], 
+                            userRemoteConfigs: [[ url: "${githubUrl}"]]])
+                    }
+                echo "Checkout Release completed: ${currentBuild.currentResult}"
+            }
+        }
+        stage("Install dependencies") {
+            steps {
+                sh "npm install"
+            }
+        }
+        stage('Downloading Anypoint Flex Gateway Image') {
+            steps {
+                script {
+                    sh """echo "Downloading Anypoint Flex Gateway Image";
+                    docker pull mulesoft/flex-gateway:latest"""
+                }
+            }    
+            post {
+                success {
+                    echo "...Download of Anypoint Flex Gateway Image succeded for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                } 
+                failure {
+                    echo "...Download of Anypoint Flex Gateway Image failed for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                }
+            }
+        }
+        stage('Registering Anypoint Flex Gateway') {
+            steps {
+               withCredentials([string(credentialsId: "anypoint.platform.${params.ENVIRONMENT}.id", variable: 'environmentId')]){
+                    script {
+                        sh """echo "Registering Anypoint Flex Gateway";
+                            docker run --entrypoint flexctl -w /registration -v "\$(pwd)":/registration mulesoft/flex-gateway:latest \
+                            register \
+                            --client-id=$CLIENT_ID \
+                            --client-secret=$CLIENT_SECRET \
+                            --environment=${environmentId} \
+                            --connected=true \
+                            --organization=${env.ANYPOINT_PLATFORM_ORG_ID} \
+                            --anypoint-url=https://devx.anypoint.mulesoft.com \
+                            ${params.FLEX_GATEWAY_NAME}"""   
+                    }
+                }
+            }    
+            post {
+                success {
+                    echo "...Registration of Anypoint Flex Gateway succeed for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                } 
+                failure {
+                    echo "...Registration of Anypoint Flex Gateway failed for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                }
+            }
+        }
+        stage('Initializing Anypoint Flex Gateway') {
+            steps {
+                script {
+                    sh """echo Retrieving Anypoint Flex Gateway registration Id;
+                        fgw_id_path=\$(find . -type f -name "*.key");
+                        fgw_id=\$(basename "\$fgw_id_path" ".key");
+                        echo "Starting Anypoint Flex Gateway";
+                        docker run --rm \
+                        --name ${params.FLEX_GATEWAY_NAME} \
+                        -v "\$(pwd)":/etc/flex-gateway/rtm \
+                        -p ${params.DOCKER_FORWARDING_PORT} \
+                        -e FLEX_RTM_ARM_AGENT_CONFIG=/etc/flex-gateway/rtm/"\$fgw_id".conf \
+                        -e FLEX_NAME=${params.FLEX_GATEWAY_NODE_NAME} \
+                        --detach \
+                        mulesoft/flex-gateway:latest"""  
+                }
+            }    
+            post {
+                success {
+                    echo "...Initialization of Anypoint Flex Gateway succeed for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                } 
+                failure {
+                    echo "...Initalization of Anypoint Flex Gateway failed for ${env.BUILD_VERSION}: ${currentBuild.currentResult}"
+                }
+            }
+        }
+    }
+    post {
+        success {
+            echo "All Good: ${env.RELEASE_VERSION}: ${currentBuild.currentResult}"    
+        }
+        failure {
+            echo "Not So Good: ${env.RELEASE_VERSION}: ${currentBuild.currentResult}"
+        }         
+        always {
+            echo "Pipeline result: ${currentBuild.result}"
+            echo "Pipeline currentResult: ${currentBuild.currentResult}"
+        }
+    }
+}  
