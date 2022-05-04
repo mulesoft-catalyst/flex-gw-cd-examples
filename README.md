@@ -6,5 +6,5 @@ This repo contains some examples showing how Continuous Delivery solutions can b
 
 1. [Flex Gateway deployed as a Kubernetes ingress controller in local mode](k8s-ingress-controller/README.md)
 2. [Flex Gateway deployed as a Kubernetes sidecar in local mode](k8s-sidecar/README.md)
-3. TBA - Flex Gateway deployed as a Docker container/Linux VM in connected mode
+3. [Flex Gateway deployed as a Docker container in connected mode](docker-container-connected-mode/README.md)
 
