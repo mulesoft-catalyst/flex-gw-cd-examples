@@ -8,7 +8,7 @@ This example uses [ArgoCD](https://argo-cd.readthedocs.io/en/stable/), a declara
 
 In this example, the configuration is defined across multiple configuration files. It is also possible to store this in a single file, as shown in the [k8s-ingress-controller example](https://github.com/mulesoft-consulting/flex-gw-cd-examples/tree/develop/k8s-ingress-controller).
 
-**Note: the steps below are correct at time of writing, based on a beta version of Flex Gateway. Please refer to the Flex Gateway documentation for up-to-date instructions on installing and configuring Flex Gateway:**
+**Note: the steps below are correct at time of writing. Please refer to the Flex Gateway documentation for up-to-date instructions on installing and configuring Flex Gateway:**
 [Flex Gateway Docs](https://docs.mulesoft.com/gateway/flex-gateway-overview)
 
 ## Pre-requisites
