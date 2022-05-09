@@ -30,10 +30,6 @@ k3d cluster create flex-sidecar \
 ```
 docker pull mulesoft/flex-gateway
 ```
-3. Save it to a .tar file (this is needed for running the registration command later) - 
-```
-docker save mulesoft/flex-gateway > flex-gateway.tar
-```
 
 ## Run the Registration Command
 
