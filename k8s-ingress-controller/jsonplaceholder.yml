@@ -41,6 +41,16 @@ spec:
           limits:
             cpu: 100m
             memory: 64Mi
+        volumeMounts:
+          - name: config
+            mountPath: "/etc/peregrine/register"
+            readOnly: true
+          - name: configmap
+            mountPath: "/etc/mulesoft/flex-gateway/conf.d/custom"
+      volumes:
+      - name: config
+        secret:
+          secretName: <your-registration-uuid>      
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress

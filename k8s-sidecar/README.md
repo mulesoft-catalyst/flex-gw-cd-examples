@@ -8,7 +8,8 @@ This example uses [ArgoCD](https://argo-cd.readthedocs.io/en/stable/), a declara
 
 In this example, the configuration is defined across multiple configuration files. It is also possible to store this in a single file, as shown in the [k8s-ingress-controller example](https://github.com/mulesoft-consulting/flex-gw-cd-examples/tree/develop/k8s-ingress-controller).
 
-**Note: the steps below are correct at time of writing, based on a beta version of Flex Gateway. Please refer to the Flex Gateway documentation for up-to-date instructions on installing and configuring Flex Gateway.**
+**Note: the steps below are correct at time of writing. Please refer to the Flex Gateway documentation for up-to-date instructions on installing and configuring Flex Gateway:**
+[Flex Gateway Docs](https://docs.mulesoft.com/gateway/flex-gateway-overview)
 
 ## Pre-requisites
 
@@ -19,7 +20,7 @@ In this example, the configuration is defined across multiple configuration file
 
 ## Prepare Your Environment
 
-1. Create a new Kubernetes cluster with a single server node:
+1. Create a new Kubernetes cluster with a single server node. For example, if using k3d to run a cluster locally:
 ```
 k3d cluster create flex-sidecar \
 --k3s-arg "--disable=traefik@server:0" \
@@ -27,82 +28,36 @@ k3d cluster create flex-sidecar \
 ```
 2. Pull the Flex Gateway container image from Docker Hub:
 ```
-docker pull mulesoft/flex-gateway:1.0.0-rc.2
-```
-3. Save it to a .tar file (this is needed for running the registration command later) - 
-```
-docker save mulesoft/flex-gateway:1.0.0-rc.2 > flex-gateway-1.0.0-rc.2.tar
+docker pull mulesoft/flex-gateway
 ```
 
 ## Run the Registration Command
 
-You can register Flex Gateway using a username and password, a connected app or a token. In this example, we will use a username and password. Please refer to the docs for full details of each option.
+**Please refer to the [official docs](https://docs.mulesoft.com/gateway/flex-local-reg-run) for up-to-date instructions on how to run the registration command.**
+
+You can register Flex Gateway using a username and password, a connected app or a token. In this example, we will use a username and password. 
 
 1. Obtain the Organization ID and of your Anypoint Platform organization
 2. Obtain the Environment ID for the environment where you want to run Flex Gateway
-3. After replacing the sample content, register your Flex Gateway by executing the following command. Here, we have specified that we want to run it in local mode by specifying `connected=false`:
+3. Replace the `<your-username>`, `<your-password>`, `<your-environment-id>`, `<your-org-id>` and `<your-gateway-name>` name placeholders in the sample command below. For `<your-gateway-name>`, provide a name you wish to use to identify this gateway instance or replica.
+4. Register your Flex Gateway by executing the following command. Here, we have specified that we want to run it in local mode by specifying `connected=false`:
 ```
-docker run --entrypoint flexctl -w /registration -v $(pwd):/registration mulesoft/flex-gateway:1.0.0-rc.2 \
+docker run --entrypoint flexctl -w /registration -v $(pwd):/registration mulesoft/flex-gateway \
 register \
 --username=<your-username> \
 --password=<your-password> \
 --environment=<your-environment-id> \
 --connected=false \
 --organization=<your-org-id> \
---anypoint-url=https://<your-instance>.anypoint.mulesoft.com \
-my-gateway
+--anypoint-url=https://anypoint.mulesoft.com \
+<your-gateway-name>
 ```
 
 ## Run the Installation Commands
 
-1. Create the namespace in which Flex Gateway will be installed:
-```
-kubectl create namespace gateway
-```
-2. You should see three new files in the directory where you executed the registration command. They look similar to the following. Note your UUID, which is the filename minus the file type:
-```
-e1bd8346-51f2-4a4b-b421-7e0ed57e98d4.conf
-e1bd8346-51f2-4a4b-b421-7e0ed57e98d4.key
-e1bd8346-51f2-4a4b-b421-7e0ed57e98d4.pem
-```
-Create a Kubernetes secret from your files:
-```
-kubectl -n gateway create secret generic <UUID-of-your-file> \
---from-file=platform.conf=<UUID-of-your-file>.conf \
---from-file=platform.key=<UUID-of-your-file>.key \
---from-file=platform.pem=<UUID-of-your-file>.pem
-```
-3. Add the Flex Gateway Helm repository:
-```
-helm repo add flex-gateway https://flex-packages.stgx.anypoint.mulesoft.com/helm
-```
-5. Update the Helm repository using the following command:
-```
-helm repo up
-```
-6. Install the flex-gateway Helm chart into the gateway namespace:
-```
-helm -n gateway upgrade -i --wait gateway flex-gateway/flex-gateway \
---set registerSecretName=<UUID-of-your-file> \
---devel
-```
-At this point, we can get the manifest for the gateway helm release:
-```
-helm get manifest gateway -n gateway > gateway_release_manifest.yaml
-```
-This step isn't required, but obtaining the manifest at this point is helpful in understanding the resources which are created by the Helm chart.
+Follow the instructions [here](https://docs.mulesoft.com/gateway/flex-local-reg-run-up#install-helm-chart-into-the-namespace).
 
-7. Verify that two `APIInstance` resources were created during installation:
-```
-kubectl -n gateway get apiinstances
-```
-The command returns output similar to the following:
-```
-NAME            ADDRESS
-ingress-http    http://0.0.0.0:80
-ingress-https   http://0.0.0.0:443
-```
-8. We now need to delete some of the resources which have been created by the Helm chart. We delete the two `APIInstance` resources wihch were created, as these are not needed in a sidecar deployment. We also create the `Service` and `Deployment` resources. These will be recreated later in our CD pipeline. 
+After completing these steps, we can now delete some of the resources which have been created by the Helm chart. We delete the two `APIInstance` resources which were created, as these are not needed in a sidecar deployment. We also create the `Service` and `Deployment` resources. These will be recreated later in our CD pipeline. 
 ```
 kubectl delete apiinstance gateway-http -n gateway
 kubectl delete apiinstance gateway-https -n gateway
@@ -149,7 +104,7 @@ To fork this repo and configure your fork, follow these steps:
 1. Navigate to https://github.com/mulesoft-consulting/flex-gw-cd-examples and click on the **Fork** button in the top-right.
 2. Select an owner and specify a name for your repository
 3. Click on the **Create fork** button. The new repo is created and you are redirected to the repo homepage.
-4. In your fork, within the `develop` branch, edit the `deployment.yaml` file. On line 73, replace the `<UUID>` placeholder with the UUID for your registration. This can be obtained from the filenames of your `.conf`, `.key` and `.pem` files as discussed above.
+4. In your fork, within the `develop` branch, edit the `deployment.yaml` file. Replace the `<your-registration-uuid>` placeholder with the UUID for your registration. This can be obtained from the filenames of your `.conf`, `.key` and `.pem` files created during the registration step previously.
 
 Now, we can create a GitHub Personal Access Token. ArgoCD will use this token to access your GitHub repo. Create the token by following these steps:
 1. In GitHub, navigate to *Settings | Developer Settings | Personal Access Tokens*
@@ -195,7 +150,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     path: k8s-ingress-controller
-    repoURL: 'https://github.com/colinlennon/flex-gw-cd-examples'
+    repoURL: '<your-forked-repo-url>'
     targetRevision: develop
   project: default
   syncPolicy:
