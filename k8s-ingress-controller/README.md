@@ -140,7 +140,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     path: k8s-ingress-controller
-    repoURL: 'https://github.com/colinlennon/flex-gw-cd-examples'
+    repoURL: '<your-repo-url>'
     targetRevision: develop
   project: default
   syncPolicy:
