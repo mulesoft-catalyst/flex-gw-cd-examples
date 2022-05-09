@@ -57,7 +57,7 @@ register \
 
 Follow the instructions [here](https://docs.mulesoft.com/gateway/flex-local-reg-run-up#install-helm-chart-into-the-namespace).
 
-After completing these steps, we can now delete some of the resources which have been created by the Helm chart. We delete the two `APIInstance` resources wihch were created, as these are not needed in a sidecar deployment. We also create the `Service` and `Deployment` resources. These will be recreated later in our CD pipeline. 
+After completing these steps, we can now delete some of the resources which have been created by the Helm chart. We delete the two `APIInstance` resources which were created, as these are not needed in a sidecar deployment. We also create the `Service` and `Deployment` resources. These will be recreated later in our CD pipeline. 
 ```
 kubectl delete apiinstance gateway-http -n gateway
 kubectl delete apiinstance gateway-https -n gateway
