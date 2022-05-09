@@ -19,9 +19,10 @@ This example uses [ArgoCD](https://argo-cd.readthedocs.io/en/stable/), a declara
 
 1. Create a new Kubernetes cluster with a single server node. For example, if using k3d to run a cluster locally:
 ```
-k3d cluster create flex-sidecar \
---k3s-arg "--disable=traefik@server:0" \
---port "8082:30080@server:0"
+k3d cluster create flex-ingress \
+--k3s-arg "--disable=traefik@server:*" \
+--port '80:80@server:*' \
+--port '443:443@server:*'
 ```
 2. Pull the Flex Gateway container image from Docker Hub:
 ```
