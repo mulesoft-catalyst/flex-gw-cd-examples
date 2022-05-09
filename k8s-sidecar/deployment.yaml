@@ -70,7 +70,7 @@ spec:
       volumes:
       - name: config
         secret:
-          secretName: cb9cee5c-e3c4-44ec-b6f7-35dc6d653d5e
+          secretName: 13e1c0bd-1cb7-4023-80cb-4767f7ee87ff
       - name: configmap  
         configMap:
           name: jsonplaceholder-sidecar-config
