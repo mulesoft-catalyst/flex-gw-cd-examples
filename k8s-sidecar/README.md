@@ -104,7 +104,7 @@ To fork this repo and configure your fork, follow these steps:
 1. Navigate to https://github.com/mulesoft-consulting/flex-gw-cd-examples and click on the **Fork** button in the top-right.
 2. Select an owner and specify a name for your repository
 3. Click on the **Create fork** button. The new repo is created and you are redirected to the repo homepage.
-4. In your fork, within the `develop` branch, edit the `deployment.yaml` file. On line 73, replace the `<UUID>` placeholder with the UUID for your registration. This can be obtained from the filenames of your `.conf`, `.key` and `.pem` files as discussed above.
+4. In your fork, within the `develop` branch, edit the `deployment.yaml` file. Replace the `<your-registration-uuid>` placeholder with the UUID for your registration. This can be obtained from the filenames of your `.conf`, `.key` and `.pem` files created during the registration step previously.
 
 Now, we can create a GitHub Personal Access Token. ArgoCD will use this token to access your GitHub repo. Create the token by following these steps:
 1. In GitHub, navigate to *Settings | Developer Settings | Personal Access Tokens*
@@ -150,7 +150,7 @@ spec:
     server: 'https://kubernetes.default.svc'
   source:
     path: k8s-ingress-controller
-    repoURL: 'https://github.com/colinlennon/flex-gw-cd-examples'
+    repoURL: '<your-forked-repo-url>'
     targetRevision: develop
   project: default
   syncPolicy:
