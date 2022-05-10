@@ -57,6 +57,18 @@ register \
 
 Follow the instructions [here](https://docs.mulesoft.com/gateway/flex-local-reg-run-up#install-helm-chart-into-the-namespace).
 
+---
+**IMPORTANT!**\
+When installing the Helm chart, it is necessary to modify the command provided in the docs.
+The command provided in the docs uses the name **ingress** for the Helm release. However, in this case, we are not installing Flex as an ingress controller. So instead of using **ingress** as the name, use **gateway**. The `clusterrolebindings.yaml` file in this example is populated based on the assumption that **gateway** is used as the Helm release name. If you use something else, you will need to update this file manually in your forked repo accordingly.
+
+Here is an example of the command, with **gateway** used as the name:
+```
+helm -n gateway upgrade -i --wait gateway flex-gateway/flex-gateway \
+--set registerSecretName=<UUID-of-your-file>
+```
+---
+
 After completing these steps, we can now delete some of the resources which have been created by the Helm chart. We delete the two `APIInstance` resources which were created, as these are not needed in a sidecar deployment. We also create the `Service` and `Deployment` resources. These will be recreated later in our CD pipeline. 
 ```
 kubectl delete apiinstance gateway-http -n gateway
