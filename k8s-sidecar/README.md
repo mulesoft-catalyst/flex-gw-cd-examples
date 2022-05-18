@@ -65,17 +65,10 @@ The command provided in the docs uses the name **ingress** for the Helm release.
 Here is an example of the command, with **gateway** used as the name:
 ```
 helm -n gateway upgrade -i --wait gateway flex-gateway/flex-gateway \
---set registerSecretName=<UUID-of-your-file>
+--set registerSecretName=<UUID-of-your-file> \
+--set service.enabled=false
 ```
 ---
-
-After completing these steps, we can now delete some of the resources which have been created by the Helm chart. We delete the two `APIInstance` resources which were created, as these are not needed in a sidecar deployment. We also create the `Service` and `Deployment` resources. These will be recreated later in our CD pipeline. 
-```
-kubectl delete apiinstance gateway-http -n gateway
-kubectl delete apiinstance gateway-https -n gateway
-kubectl delete service gateway -n gateway
-kubectl delete deployment gateway -n gateway
-```
 
 ## Install ArgoCD
 
