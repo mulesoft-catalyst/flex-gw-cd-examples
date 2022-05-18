@@ -78,7 +78,7 @@ For simplicity, ArgoCD is installed in the same cluster as Flex Gateway in this 
 
 1. Install ArgoCD into a new namespace called `argocd`
 ```
-kubectl create namespace argocd
+kubectl create namespace argocd && \
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 2. Download and install the ArgoCD CLI. The method of installation varies depending on your operating system. Refer to the [CLI installation docs](https://argo-cd.readthedocs.io/en/stable/cli_installation/) for more detailed instructions. If you have Homebrew, it can be installed as shown:
