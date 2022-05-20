@@ -19,8 +19,8 @@ HashiCorp Vault is used in this example. The ArgoCD Vault Plugin supports other 
 1. A tool to create Kubernetes clusters. This example was developed using [k3d](https://k3d.io/).
 2. [kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl), a tool used to interact with Kubernetes clusters.
 3. [Helm](https://helm.sh/docs/intro/install/), a tool used to install Flex Gateway. Version 3.0.0 or later is required.
-4. [Docker](https://docs.docker.com/get-docker/), required to register a Flex Gateway instance using the `flexctl` command
-5. Vault CLI. Can be installed on MacOS via Homebrew: `brew install vault`. Set the required environment variables as described [here](https://www.vaultproject.io/docs/commands). ????????
+4. [Docker](https://docs.docker.com/get-docker/), required to register a Flex Gateway instance using the `flexctl` command.
+5. Vault CLI. Can be installed on MacOS via Homebrew: `brew install vault`.
 
 ## Prepare Your Environment
 
@@ -76,7 +76,7 @@ kubectl port-forward vault-0 8200:8200
 ```
 kubectl exec vault-0 -- vault token create
 ```
-Now you can log in using this token, at `http://localhost:8200/`. You can see that a key/value Secrets Engine called `secret` is created by default. We will use this.
+Now you can log in using this token, at `http://localhost:8200/`. You can see that a key/value Secrets Engine called `secret` is created by default. We will use this.\
 6. Set an environment variable so that the Vault CLI can connect to Vault:
 ```
 export VAULT_ADDR=http://localhost:8200/
@@ -160,7 +160,6 @@ initContainers:
   volumeMounts:
     - mountPath: /custom-tools
       name: custom-tools
-
 ```
  
 Here, we are creating a blank volume called `custom-tools` to be used for moving the argocd-vault-plugin binary from the initContainer to the main container. Then we are downloading the argocd-vault-plugin binary via an InitContainer and then moving the binary to a path `custom-tools` that will be used later. We then have a Volume Mount on that `custom-tools` path so that we can access it in the main container. Now in the argocd-repo-server container, we are adding a Volume Mount that points to the `custom-tools` volume we created earlier and mounting that volume within `usr/local/bin` to make the plugin available to the container. At this point, we can test that the plugin is available by running `argocd-vault-plugin` on the `argocd-repo-server` pod (e.g. using `kubectl exec`).
@@ -173,7 +172,6 @@ data:
       generate:
         command: ["argocd-vault-plugin"]
         args: ["generate", "./"]
-
 ```
 
 After applying this update to the cluster, restart the `argocd-repo-server` deployment. Then in the ArgoCD UI, open the Create Application dialog. In the bottom section, change the dropdown value from Directory to Plugin, then verify that `argocd-vault-plugin` is available in the Name dropdown. 
@@ -231,7 +229,6 @@ You should get a `401 Unauthorized` response with this message:
 Now, try specifying the username along with an incorrect password:
 ```
 curl -v http://localhost:8082/users/ -u "testuser:welcome"
-
 ```
 You should get a `401 Unauthorized` response with this message:
 ```
@@ -240,6 +237,5 @@ You should get a `401 Unauthorized` response with this message:
 Finally, try specifying the username along with the correct password:
 ```
 curl -v http://localhost:8082/users/ -u "testuser:welcome123"
-
 ```
 You should get a `200 OK` response and a JSON object with a list of users.
