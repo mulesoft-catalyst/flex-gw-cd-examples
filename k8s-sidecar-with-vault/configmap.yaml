@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jsonplaceholder-sidecar-config
+  namespace: gateway
+  annotations:
+    avp.kubernetes.io/path: "secret/data/jsonplaceholder"
+data:
+  jsonplaceholder.apiinstance.yaml: |+
+    ---
+    apiVersion: gateway.mulesoft.com/v1alpha1
+    kind: ApiInstance
+    metadata:
+      name: jsonplaceholder
+    spec:
+      address: http://0.0.0.0:8080
+      services:
+        jsonplaceholder:
+          address: http://localhost:3000/
+      policies:
+        - policyRef:
+            name: access-log
+        - policyRef:
+            name: http-basic-authentication-flex
+          config:
+            username: testuser
+            password: <password>
