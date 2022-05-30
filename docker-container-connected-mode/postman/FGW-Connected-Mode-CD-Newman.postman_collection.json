@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "cf6198ae-cc99-4e5a-8e1b-9d96f1dcf592",
+		"_postman_id": "d5722fdd-d5c0-41a0-b26c-3ff412eafcb5",
 		"name": "FGW-Connected-Mode-CD-Newman",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -164,6 +164,17 @@
 		},
 		{
 			"name": "4. Create Exchange Asset for registering API Instance in Flex Gateway",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"setTimeout(function(){}, 10000);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
 			"request": {
 				"method": "POST",
 				"header": [
@@ -290,6 +301,15 @@
 						],
 						"type": "text/javascript"
 					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"setTimeout(function(){}, 10000);"
+						],
+						"type": "text/javascript"
+					}
 				}
 			],
 			"request": {
@@ -354,10 +374,10 @@
 					}
 				},
 				"url": {
-					"raw": "https://devx.anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organizationId}}/environments/{{environmentId}}/apis/{{apiId}}/policies",
+					"raw": "https://{{anypointBaseUrl}}.anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organizationId}}/environments/{{environmentId}}/apis/{{apiId}}/policies",
 					"protocol": "https",
 					"host": [
-						"devx",
+						"{{anypointBaseUrl}}",
 						"anypoint",
 						"mulesoft",
 						"com"
