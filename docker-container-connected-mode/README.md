@@ -2,9 +2,13 @@
 
 These examples show how a Continuous Delivery solution can be implemented for an [Anypoint Flex Gateway](https://docs.mulesoft.com/gateway/flex-gateway-getting-started) instance installed as a Docker container, in connected mode. In this mode, Flex Gateway is connected with the Anypoint control plane and its managed via Anypoint Platform Web User Interface or its Platform APIs.
 
+![Container based deployment architecture](img/deploy_arch_vm.png)
+
 There are 2 presented examples:
 1. The first example covers how to automate the installation, registration and start of the Flex Gateway as a Docker container via a Jenkins pipeline described by the Jenkinsfile found at `docker-container-connected-mode/jenkins/cd-deploy-flex-gateway-connected-mode-docker.jenkinsfile` within this repository.
 2. The second example demonstrates how to programmatically manage the Flex Gateway via HTTPs requests to Anypoint Platform APIs. These requests are part of a Postman collection that gets executed by Newman CLI in a Jenkins pipeline described by the Jenkinsfile found at `docker-container-connected-mode/jenkins/cd-deploy-app.jenkinsfile` within this repository. With these we cover the registration of a sample API as an API instance to be managed via the Flex Gateway and how to apply [Basic Authentication Policy](https://docs.mulesoft.com/api-manager/2.x/basic-authentication-simple-concept) to that API instance before deploying it as a Docker container.
+
+![Flex Gateway Connected Mode examples](img/fgw_connected_mode_examples.png)
 
 Both examples use a [Connected App](https://docs.mulesoft.com/access-management/connected-apps-overview) to interact with Anypoint Platform APIs.
 
@@ -86,4 +90,4 @@ Once configured, execute the pipelines by providing the following parameters:
 * PROXY_URI = URI that will expose the Micro Service managed by Anypoint Flex Gateway (Default: `http://0.0.0.0:8081/api`)
 
 ## Test the Managed API
-1. In postman, send a request to: `http://localhost:8081/api/films`.
+In postman, send a request to: `http://localhost:8081/api/films`, the endpoint should be managed via Flex Gateway.
