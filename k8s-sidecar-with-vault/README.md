@@ -58,12 +58,11 @@ helm -n gateway upgrade -i --wait gateway flex-gateway/flex-gateway \
 ```
 helm repo add hashicorp https://helm.releases.hashicorp.com
 ```
-2. Install Vault in dev mode:
+2. Install Vault in dev mode (Note: Dev mode is ideal for learning and demonstration environments but NOT recommended for a production environment):
 ```
 helm install vault hashicorp/vault \
 --set "server.dev.enabled=true"
 ```
-(Note: Dev mode is ideal for learning and demonstration environments but NOT recommended for a production environment)
 3. Enable the AppRole auth method:
 ```
 kubectl exec vault-0 -- vault auth enable approle
@@ -77,6 +76,7 @@ kubectl port-forward vault-0 8200:8200
 kubectl exec vault-0 -- vault token create
 ```
 Now you can log in using this token, at `http://localhost:8200/`. You can see that a key/value Secrets Engine called `secret` is created by default. We will use this.\
+\
 6. Set an environment variable so that the Vault CLI can connect to Vault:
 ```
 export VAULT_ADDR=http://localhost:8200/
