@@ -122,6 +122,25 @@ vault write -f auth/approle/role/demo-role/secret-id
 vault kv put secret/jsonplaceholder password=welcome123
 ```
 
+## Create Kubernetes Secret for ArgoCD Vault Plugin
+The ArgoCD Vault Plugin will connect to your Vault instance to retrieve secrets. To enable this, we will create a Kubernetes Secret called `argocd-vault-plugin-credentials`in the `argocd` namespace, in which we will define some key-value pairs. These will be mounted as environment variables in the `argocd-repo-server` deployment.
+
+First, execute `kubectl get service vault -o yaml` and get the `ClusterIP` value. We will use this in the next step. Then create a file called `secret.yaml` with the content below. Replace the placeholder values for `AVP_ROLE_ID`, `AVP_SECRET_ID` and `VAULT_ADDR` with the values obtained in the previous steps.
+```
+kind: Secret
+apiVersion: v1
+metadata:
+  name: argocd-vault-plugin-credentials
+  namespace: argocd
+type: Opaque
+stringData:
+  AVP_AUTH_TYPE: approle
+  AVP_ROLE_ID: <role-id-obtained-previously>
+  AVP_SECRET_ID: <secret-id-obtained-previously>
+  AVP_TYPE: vault
+  VAULT_ADDR: http://<ClusterIP-obtained-previously>:8200
+```
+Create the secret by running `kubectl apply -f secret.yaml -n argocd`. 
 
 ## Install ArgoCD
 
@@ -170,11 +189,34 @@ data:
   configManagementPlugins: |-
     - name: argocd-vault-plugin
       generate:
-        command: ["argocd-vault-plugin"]
-        args: ["generate", "./"]
+        command: ["sh", "-c"]
+        args: ["argocd-vault-plugin generate ./"]
 ```
 
-After applying this update to the cluster, restart the `argocd-repo-server` deployment. Then in the ArgoCD UI, open the Create Application dialog. In the bottom section, change the dropdown value from Directory to Plugin, then verify that `argocd-vault-plugin` is available in the Name dropdown. 
+Now, we mount the `argocd-vault-plugin-credentials` Kubernetes Secret we created earlier as environment variables within the `argocd-repo-server` deployment. This enables the ArgoCD Vault Plugin to connect to our Vault instance to retrieve secrets. To do this, first retrieve the current config of the `argocd-repo-server` deployment:
+```
+kubectl get deployment argocd-repo-server -n argocd -o yaml > argocd-repo-server.yaml
+```
+Then edit the `argocd-repo-server.yaml` file. Add an `envFrom` to the `argocd-repo-server` container, as shown in this snippet:
+```
+containers:
+- name: argocd-repo-server
+  envFrom:
+    - secretRef:
+        name: argocd-vault-plugin-credentials
+```
+This mounts the key-value pairs defined in the `argocd-vault-plugin-credentials` secret as environment variables. Each key becomes an environment variable name in the Pod. Apply these changes via `kubectl appy`. 
+
+Restart the `argocd-repo-server` deployment:
+```
+kubectl rollout restart deployment/argocd-repo-server -n argocd
+
+```
+Then in the ArgoCD UI, open the Create Application dialog. In the bottom section, change the dropdown value from Directory to Plugin, then verify that `argocd-vault-plugin` is available in the Name dropdown. You can also verify that the environment variables have been mounted by getting the name of the `argocd-repo-server` pod, then running:
+```
+kubectl exec <pod-name> -n argocd -- env
+```
+Check that all of the key-value pairs from the `argocd-vault-plugin-credentials` secret have been mounted as environment variables.
 
 ## Create a source code repository
 The `k8s-sidecar-with-vault` directory within this repository contains example YAML configuration files which describe the *desired state* of the Flex Gateway cluster we created above. We will create a new application in ArgoCD, which will use these files to configure the cluster. Before we can do this, we need to create a source code repository which the ArgoCD application will connect to. In this example, we **fork** this GitHub repo, then configure ArgoCD to connect to it. ArgoCD can be configured to connect to other Git-based SCMs too - please refer to the docs if needed. 
@@ -204,15 +246,7 @@ We will now create a new application in ArgoCD, which will use the configuration
 - In *Sync Options*, select **Auto-create Namespace**. 
 - In the *Source* section, specify the ```develop``` branch in the *Revision* field. In the *Path* field, specify ```k8s-ingress-controller```. 
 - In the *Destination* section, specify ```https://kubernetes.default.svc``` as the *Cluster URL*. This tells ArgoCD to use the cluster it is running in as the target cluster. Specify ```gateway``` as the *namespace*.
-10. Near the bottom of the dialog, change the final dropdown from *Directory* to *Plugin*. In the Name dropdown, select `argocd-vault-plugin`. Add the following environment variables:
-```
-VAULT_ADDR: "http://vault:8082"     # Path to your Vault Instance
-AVP_TYPE: vault                     # The Backend Type
-AVP_AUTH_TYPE: approle              # Auth method we are using
-AVP_ROLE_ID: role_id                # AppRole Role ID obtained earlier
-AVP_SECRET_ID: secret_id            # AppRole Secret ID obtained earlier
-```
-Note: to get the VAULT_ADDR, you can `kubectl get service vault -o yaml` and get the `ClusterIP` value. Then derive the value for this environment variable using it: `http://<CluserIP>:8200`.
+10. Near the bottom of the dialog, change the final dropdown from *Directory* to *Plugin*. In the Name dropdown, select `argocd-vault-plugin`. 
 11. Click on the **Create** button.
 12. The *Applications* screen is displayed, and the app we just created is shown. Initially, the status is *Missing, OutOfSync, Syncing* because the desired state defined in the GitHub repo does not exist on the target cluster:\
 ![alt text](https://github.com/mulesoft-consulting/flex-gw-cd-examples/blob/develop/k8s-ingress-controller/img/7-argocd-app-tile.png "app tile")
