@@ -1,0 +1,542 @@
+{
+	"info": {
+		"_postman_id": "d5722fdd-d5c0-41a0-b26c-3ff412eafcb5",
+		"name": "FGW-Connected-Mode-CD-Newman",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Generate Access Token for Connected App with Client Credentials",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"accessToken\", data.access_token);",
+							"pm.environment.set(\"cookies\", \"_csrf=\" + pm.cookies.get(\"_csrf\") +",
+							"                              \"; XSRF-TOKEN=\" + pm.cookies.get(\"XSRF-TOKEN\") +",
+							"                              \"; mulesoft.sess=\" + pm.cookies.get(\"mulesoft.sess\") +",
+							"                              \"; mulesoft.sess.sig=\" + pm.cookies.get(\"mulesoft.sess.sig\") );",
+							"                              ",
+							"pm.cookies.jar().clear(pm.environment.get(\"url\"));",
+							"const cookieJar = pm.cookies.jar();",
+							"cookieJar.clear(pm.environment.get(\"url\"));"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"const jar = pm.cookies.jar();",
+							"jar.clear(pm.request.url, function (error) {",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"grant_type\": \"client_credentials\",\n    \"client_id\": \"{{clientId}}\",\n    \"client_secret\": \"{{clientSecret}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{anypointBaseUrl}}.anypoint.mulesoft.com/accounts/api/v2/oauth2/token",
+					"protocol": "https",
+					"host": [
+						"{{anypointBaseUrl}}",
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"accounts",
+						"api",
+						"v2",
+						"oauth2",
+						"token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2. Retrieve Anypoint Platform Organization Id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"pm.environment.set(\"organizationId\", data.client.org_id);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{accessToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://{{anypointBaseUrl}}.anypoint.mulesoft.com/accounts/api/me",
+					"protocol": "https",
+					"host": [
+						"{{anypointBaseUrl}}",
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"accounts",
+						"api",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3. Retrieve Environment Id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"if (data.data[0].id!= null){",
+							"    pm.environment.set(\"environmentId\", data.data[0].id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{accessToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://{{anypointBaseUrl}}.anypoint.mulesoft.com/accounts/api/organizations/{{organizationId}}/environments?search={{environmentName}}",
+					"protocol": "https",
+					"host": [
+						"{{anypointBaseUrl}}",
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"accounts",
+						"api",
+						"organizations",
+						"{{organizationId}}",
+						"environments"
+					],
+					"query": [
+						{
+							"key": "search",
+							"value": "{{environmentName}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4. Create Exchange Asset for registering API Instance in Flex Gateway",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"setTimeout(function(){}, 10000);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{accessToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "name",
+							"value": "{{assetId}}",
+							"type": "text"
+						},
+						{
+							"key": "type",
+							"value": "{{assetType}}",
+							"type": "text"
+						},
+						{
+							"key": "status",
+							"value": "{{assetStatus}}",
+							"type": "text"
+						},
+						{
+							"key": "properties.apiVersion",
+							"value": "{{assetVersion}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://{{anypointBaseUrl}}.anypoint.mulesoft.com/exchange/api/v2/organizations/{{organizationId}}/assets/{{assetGroupId}}/{{assetId}}/{{assetSemanticVersion}}",
+					"protocol": "https",
+					"host": [
+						"{{anypointBaseUrl}}",
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"exchange",
+						"api",
+						"v2",
+						"organizations",
+						"{{organizationId}}",
+						"assets",
+						"{{assetGroupId}}",
+						"{{assetId}}",
+						"{{assetSemanticVersion}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5. Retrieve Flex Gateway Id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"if (data.content[0].id!= null){",
+							"    pm.environment.set(\"gatewayId\", data.content[0].id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{accessToken}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://{{anypointBaseUrl}}.anypoint.mulesoft.com/standalone/api/v1/organizations/{{organizationId}}/environments/{{environmentId}}/gateways?name={{gatewayName}}",
+					"protocol": "https",
+					"host": [
+						"{{anypointBaseUrl}}",
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"standalone",
+						"api",
+						"v1",
+						"organizations",
+						"{{organizationId}}",
+						"environments",
+						"{{environmentId}}",
+						"gateways"
+					],
+					"query": [
+						{
+							"key": "name",
+							"value": "{{gatewayName}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6. Create API Instance in Flex Gateway",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var data = JSON.parse(responseBody);",
+							"if (data.id!= null){",
+							"    pm.environment.set(\"apiId\", data.id);",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"setTimeout(function(){}, 10000);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{accessToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"technology\": \"flexGateway\",\n    \"endpoint\": {\n        \"deploymentType\": \"HY\",\n        \"muleVersion4OrAbove\": null,\n        \"uri\": \"{{backendServiceUri}}\",\n        \"type\": \"http\",\n        \"isCloudHub\": null,\n        \"proxyUri\": \"{{proxyUri}}\",\n        \"referencesUserDomain\": null,\n        \"responseTimeout\": null\n    },\n    \"spec\": {\n        \"assetId\": \"{{assetId}}\",\n        \"groupId\": \"{{assetGroupId}}\",\n        \"version\": \"{{assetSemanticVersion}}\"\n    },\n    \"instanceLabel\": \"{{apiLabel}}\",\n    \"deployment\": {\n        \"environmentId\": \"{{environmentId}}\",\n        \"type\": \"HY\",\n        \"expectedStatus\": \"deployed\",\n        \"overwrite\": false,\n        \"targetId\": \"{{gatewayId}}\",\n        \"targetName\": \"{{gatewayName}}\",\n        \"gatewayVersion\": \"{{gatewayVersion}}\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{anypointBaseUrl}}.anypoint.mulesoft.com/apimanager/xapi/v1/organizations/{{organizationId}}/environments/{{environmentId}}/apis",
+					"protocol": "https",
+					"host": [
+						"{{anypointBaseUrl}}",
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"apimanager",
+						"xapi",
+						"v1",
+						"organizations",
+						"{{organizationId}}",
+						"environments",
+						"{{environmentId}}",
+						"apis"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "7. Create API Policy: Basic Authentication",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{accessToken}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"pointcutData\": null,\n    \"groupId\": \"68ef9520-24e9-4cf2-b2f5-620025690913\",\n    \"assetId\": \"http-basic-authentication\",\n    \"assetVersion\": \"1.3.0\",\n    \"configurationData\": {\n        \"username\": \"{{username}}\",\n        \"password\": \"{{password}}\"\n    }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{anypointBaseUrl}}.anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organizationId}}/environments/{{environmentId}}/apis/{{apiId}}/policies",
+					"protocol": "https",
+					"host": [
+						"{{anypointBaseUrl}}",
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"apimanager",
+						"api",
+						"v1",
+						"organizations",
+						"{{organizationId}}",
+						"environments",
+						"{{environmentId}}",
+						"apis",
+						"{{apiId}}",
+						"policies"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "anypointBaseUrl",
+			"value": "devx",
+			"type": "string"
+		},
+		{
+			"key": "cookies",
+			"value": "xyz",
+			"type": "string"
+		},
+		{
+			"key": "url",
+			"value": "https://devx.anypoint.mulesoft.com/accounts/api/v2/oauth2/token",
+			"type": "string"
+		},
+		{
+			"key": "clientId",
+			"value": "abc123",
+			"type": "string"
+		},
+		{
+			"key": "clientSecret",
+			"value": "123abc",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "abc-123-123-abc",
+			"type": "string"
+		},
+		{
+			"key": "organizationId",
+			"value": "abc123123abc",
+			"type": "string"
+		},
+		{
+			"key": "environmentName",
+			"value": "Sandbox",
+			"type": "string"
+		},
+		{
+			"key": "environmentId",
+			"value": "12345abcde123",
+			"type": "string"
+		},
+		{
+			"key": "apiId",
+			"value": "12345",
+			"type": "string"
+		},
+		{
+			"key": "assetId",
+			"value": "my-test-api",
+			"type": "string"
+		},
+		{
+			"key": "assetGroupId",
+			"value": "abc123123abc",
+			"type": "string"
+		},
+		{
+			"key": "assetSemanticVersion",
+			"value": "1.0.0",
+			"type": "string"
+		},
+		{
+			"key": "assetVersion",
+			"value": "v1",
+			"type": "string"
+		},
+		{
+			"key": "assetType",
+			"value": "http-api"
+		},
+		{
+			"key": "assetStatus",
+			"value": "published"
+		},
+		{
+			"key": "gatewayName",
+			"value": "my-test-gateway",
+			"type": "string"
+		},
+		{
+			"key": "gatewayId",
+			"value": "xyz987uvw654",
+			"type": "string"
+		},
+		{
+			"key": "gatewayVersion",
+			"value": "1.0.0",
+			"type": "string"
+		},
+		{
+			"key": "apiLabel",
+			"value": "test-instance",
+			"type": "string"
+		},
+		{
+			"key": "backendServiceUri",
+			"value": "http://httpbin.org",
+			"type": "string"
+		},
+		{
+			"key": "proxyUri",
+			"value": "http://0.0.0.0:8081/api",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "us3r",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "p4ssw0rd",
+			"type": "string"
+		}
+	]
+}

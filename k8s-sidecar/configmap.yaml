@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jsonplaceholder-sidecar-config
+  namespace: gateway
+data:
+  jsonplaceholder.apiinstance.yaml: |+
+    ---
+    apiVersion: gateway.mulesoft.com/v1alpha1
+    kind: ApiInstance
+    metadata:
+      name: jsonplaceholder
+    spec:
+      address: http://0.0.0.0:8080
+      services:
+        jsonplaceholder:
+          address: http://localhost:3000/
+      policies:
+        - policyRef:
+            name: access-log

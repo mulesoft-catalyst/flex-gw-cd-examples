@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jsonplaceholder
+  labels:
+    app: jsonplaceholder
+    service: jsonplaceholder
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+  selector:
+    app: jsonplaceholder
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jsonplaceholder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jsonplaceholder
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: jsonplaceholder
+        version: v1
+    spec:
+      containers:
+      - image: svenwal/jsonplaceholder
+        imagePullPolicy: IfNotPresent
+        name: jsonplaceholder
+        ports:
+        - name: http
+          containerPort: 3000
+        resources:
+          limits:
+            cpu: 100m
+            memory: 64Mi
+        volumeMounts:
+          - name: config
+            mountPath: "/etc/peregrine/register"
+            readOnly: true
+      volumes:
+      - name: config
+        secret:
+          secretName: <your-registration-uuid>      
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jsonplaceholder
+spec:
+  ingressClassName: ingress-http.gateway
+  rules:
+  - http:
+      paths:
+      - path: /api(/users/.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: jsonplaceholder
+            port:
+              number: 80
+---
+apiVersion: gateway.mulesoft.com/v1alpha1
+kind: PolicyBinding
+metadata:
+  name: ingress-http-auth
+spec:
+  targetRef:
+    name: ingress-http
+  policyRef:
+    name: http-basic-authentication-flex
+  config:
+    username: foo
+    password: bar
