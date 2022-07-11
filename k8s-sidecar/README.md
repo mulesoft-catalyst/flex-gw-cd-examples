@@ -121,8 +121,13 @@ Now, we can create a GitHub Personal Access Token. ArgoCD will use this token to
 
 ## Create an ArgoCD Application
 
-We will now create a new application in ArgoCD, which will use the configuration files in the source code repository we've just created (the fork of this repository) to configure the cluster.
-**TODO: list the files and describe their content here** 
+We will now create a new application in ArgoCD, which will use the configuration files in the source code repository we've just created (the fork of this repository) to configure the cluster - 
+ - *service.yaml*: defines the Kubernetes `Service` object.
+ - *deployment.yaml*: defines the Kubernetes `Deployment` object, including two containers. One of these is the 'jsonplaceholder' microservice and the other one is the Flex Gateway instance, deployed as a sidecar.
+ - *clusterrolebinding.yaml*: defines a Kubernetes `ClusterRoleBinding` object, which maps `ServiceAccount` objects to a `ClusterRole`. This is required in order for Flex Gateway to run as a sidecar.
+ - *configmap.yaml*: defines a Kubeternetes `ConfigMap` object. This is mounted on the container running Flex Gateway and is used to define an `ApiInstance` within it.
+ 
+Perform these steps to create a new application in ArgoCD:
 
 1. In a browser window, navigate to https://localhost:8080. You can choose to ignore any certificate validity warnings and you should reach the login screen. If not, check to ensure that you have the port-forwarding command running as described above.
 2. Log in as the `admin` user, using the password you set earlier for this user.
