@@ -437,22 +437,22 @@
 		},
 		{
 			"key": "clientId",
-			"value": "abc123",
+			"value": "[CLIENT ID]",
 			"type": "string"
 		},
 		{
 			"key": "clientSecret",
-			"value": "123abc",
+			"value": "[CLIENT SECRET]",
 			"type": "string"
 		},
 		{
 			"key": "accessToken",
-			"value": "abc-123-123-abc",
+			"value": "[ACCESS TOKEN]",
 			"type": "string"
 		},
 		{
 			"key": "organizationId",
-			"value": "abc123123abc",
+			"value": "[ORGANIZATION ID]",
 			"type": "string"
 		},
 		{
@@ -462,12 +462,12 @@
 		},
 		{
 			"key": "environmentId",
-			"value": "12345abcde123",
+			"value": "[ENVIRONMENT ID]",
 			"type": "string"
 		},
 		{
 			"key": "apiId",
-			"value": "12345",
+			"value": "[API ID]",
 			"type": "string"
 		},
 		{
@@ -477,7 +477,7 @@
 		},
 		{
 			"key": "assetGroupId",
-			"value": "abc123123abc",
+			"value": "[ASSET GROUP ID]",
 			"type": "string"
 		},
 		{
@@ -505,7 +505,7 @@
 		},
 		{
 			"key": "gatewayId",
-			"value": "xyz987uvw654",
+			"value": "[ENTER GATEWAY ID]",
 			"type": "string"
 		},
 		{
@@ -530,12 +530,12 @@
 		},
 		{
 			"key": "username",
-			"value": "us3r",
+			"value": "[ENTER USERNAME]",
 			"type": "string"
 		},
 		{
 			"key": "password",
-			"value": "p4ssw0rd",
+			"value": "[ENTER PASSWORD]",
 			"type": "string"
 		}
 	]
